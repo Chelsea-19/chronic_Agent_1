@@ -6,7 +6,8 @@ from app.features.companion.chat_service import CompanionChatService
 from app.services.repositories import ChatRepository
 from app.ui.components.action_cards import render_suggestion_chip
 from app.ui.errors import log_exception
-from app.ui.navigation import PAGE_HOME, PAGE_MEDS, PAGE_REPORTS, ensure_valid_page
+# Fix: Import from page_keys instead of navigation to avoid circular dependency
+from app.ui.page_keys import PAGE_HOME, PAGE_MEDS, PAGE_REPORTS, ensure_valid_page
 
 
 def _render_assistant_result(result: dict):

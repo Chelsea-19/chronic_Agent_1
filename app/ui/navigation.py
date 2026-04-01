@@ -1,21 +1,20 @@
-"""Central page registry and navigation helpers for stable routing keys."""
+"""Central page registry for CarePilot CN — Handles rendering of pages."""
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Dict, List
 import streamlit as st
 
+# 1. Core Keys and Logic (Import from core to avoid circles)
 from app.ui.page_keys import (
     PAGE_HOME, PAGE_CHAT, PAGE_MEDS, PAGE_REPORTS, PAGE_SETTINGS,
     PAGE_TIMELINE, PAGE_WORKFLOWS, PAGE_PATIENTS, DEFAULT_PAGE,
-    LEGACY_PAGE_MAPPING
+    ensure_valid_page, go_to_page
 )
 
-# Import mandatory MVP pages
+# 2. Dependency: Main Pages (This causes navigation -> pages)
 from app.ui.pages.chat import page_chat
 from app.ui.pages.dashboard import page_dashboard
 from app.ui.pages.medications import page_medications
-
-# Import optional/secondary pages
 from app.ui.pages.reports import page_reports
 from app.ui.pages.timeline import page_timeline
 from app.ui.pages.workflows import page_workflows
@@ -35,15 +34,12 @@ def _placeholder_page(title: str, description: str):
     return _render
 
 # Central Configuration for Pages
+# Components should NOT import this to avoid circles
 PAGE_REGISTRY: Dict[str, PageDef] = {
     PAGE_HOME: PageDef(PAGE_HOME, "🏠 今日旅程", page_dashboard, True),
     PAGE_CHAT: PageDef(PAGE_CHAT, "💬 助手中心", page_chat, True),
     PAGE_MEDS: PageDef(PAGE_MEDS, "💊 用药管理", page_medications, True),
-    
-    # Secondary Pages - High Quality but not core MVP
     PAGE_TIMELINE: PageDef(PAGE_TIMELINE, "📅 健康旅程", page_timeline, False),
-    
-    # Placeholder Pages - For modules that need stabilization
     PAGE_REPORTS: PageDef(
         PAGE_REPORTS, 
         "📋 健康报告", 
@@ -62,29 +58,3 @@ PAGE_REGISTRY: Dict[str, PageDef] = {
 
 PRIMARY_PAGE_KEYS = [k for k, v in PAGE_REGISTRY.items() if v.is_primary]
 SECONDARY_PAGE_KEYS = [k for k, v in PAGE_REGISTRY.items() if not v.is_primary]
-
-def ensure_valid_page(page_key: str | None) -> str:
-    """Robust conversion of any input (label, old key, etc) to a stable page key."""
-    if not page_key:
-        return DEFAULT_PAGE
-    
-    # 1. Search in legacy mapping
-    if page_key in LEGACY_PAGE_MAPPING:
-        return LEGACY_PAGE_MAPPING[page_key]
-        
-    # 2. Search in registry keys
-    if page_key in PAGE_REGISTRY:
-        return page_key
-        
-    # 3. Search in registry labels (as a last resort fallback)
-    for k, v in PAGE_REGISTRY.items():
-        if v.label == page_key:
-            return k
-            
-    # Default to home
-    return DEFAULT_PAGE
-
-def go_to_page(page_key: str):
-    """Safely switch the current page and trigger rerun."""
-    st.session_state.current_page = ensure_valid_page(page_key)
-    st.rerun()
